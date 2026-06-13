@@ -27,7 +27,16 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
     } catch (err) {
       console.error('Eventmaker auth failed', err)
       if (err instanceof ApiError) {
-        setError(`${err.message}${err.details?.status ? ` (${err.details.status})` : ''}`)
+        setError(
+          [
+            `${err.message}${err.details?.status ? ` (${err.details.status})` : ''}`,
+            err.details?.url ? `URL: ${err.details.url}` : '',
+            err.details?.contentType ? `Content-Type: ${err.details.contentType}` : '',
+            err.details?.bodyPreview ? `Réponse: ${err.details.bodyPreview}` : '',
+          ]
+            .filter(Boolean)
+            .join(' · '),
+        )
       } else if (err instanceof TypeError) {
         setError('La requête a été bloquée ou interrompue par le navigateur. Vérifiez CORS dans la console.')
       } else {

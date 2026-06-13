@@ -1,4 +1,4 @@
-const BASE = '/eventmaker-api'
+const BASE = '/api/eventmaker'
 
 export class ApiError extends Error {
   constructor(
