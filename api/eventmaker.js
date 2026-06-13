@@ -60,7 +60,7 @@ function readRequestBody(req) {
   })
 }
 
-function requestEventmaker({ method, path, body, contentType, accept }) {
+function requestEventmaker({ method, path, body, contentType, accept }, redirectCount = 0) {
   return new Promise((resolve, reject) => {
     const request = https.request(
       {
@@ -79,6 +79,30 @@ function requestEventmaker({ method, path, body, contentType, accept }) {
           responseBody += chunk
         })
         response.on('end', () => {
+          const location = response.headers.location
+          if (isRedirect(response.statusCode) && location && redirectCount < 5) {
+            const next = resolveRedirect(location)
+            const nextMethod =
+              response.statusCode === 303 || response.statusCode === 301 || response.statusCode === 302
+                ? 'GET'
+                : method
+            const nextBody = nextMethod === 'GET' || nextMethod === 'HEAD' ? null : body
+
+            requestEventmaker(
+              {
+                method: nextMethod,
+                path: next,
+                body: nextBody,
+                contentType,
+                accept,
+              },
+              redirectCount + 1,
+            )
+              .then(resolve)
+              .catch(reject)
+            return
+          }
+
           resolve({
             statusCode: response.statusCode || 502,
             contentType: response.headers['content-type'],
@@ -92,4 +116,17 @@ function requestEventmaker({ method, path, body, contentType, accept }) {
     if (body) request.write(body)
     request.end()
   })
+}
+
+function isRedirect(statusCode) {
+  return [301, 302, 303, 307, 308].includes(statusCode)
+}
+
+function resolveRedirect(location) {
+  if (location.startsWith('http://') || location.startsWith('https://')) {
+    const url = new URL(location)
+    return `${url.pathname}${url.search}`
+  }
+
+  return location
 }
