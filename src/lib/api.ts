@@ -1,4 +1,5 @@
-const BASE = '/api/eventmaker'
+const PROD_PROXY = '/api/eventmaker'
+const DEV_PROXY = '/api/eventmaker-dev'
 
 export class ApiError extends Error {
   constructor(
@@ -63,7 +64,12 @@ function buildApiUrl(path: string, token: string): string {
     orderedParams.set(key, value)
   })
 
-  return `${BASE}${pathname}?${orderedParams.toString()}`
+  if (import.meta.env.DEV) {
+    return `${DEV_PROXY}${pathname}?${orderedParams.toString()}`
+  }
+
+  orderedParams.set('path', pathname.replace(/^\/+/, ''))
+  return `${PROD_PROXY}?${orderedParams.toString()}`
 }
 
 async function readJsonResponse<T>(res: Response, url: string): Promise<T> {

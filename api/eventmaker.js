@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   try {
     const targetPath = buildTargetPath(req)
     const body = await readRequestBody(req)
-
     const upstream = await requestEventmaker({
       method: req.method || 'GET',
       path: targetPath,
@@ -31,8 +30,7 @@ export default async function handler(req, res) {
 
 function buildTargetPath(req) {
   const query = req.query || {}
-  const rawPath = Array.isArray(query.path) ? query.path.join('/') : query.path
-  const path = String(rawPath || '').replace(/^\/+/, '')
+  const rawPath = String(query.path || '').replace(/^\/+/, '')
   const params = new URLSearchParams()
 
   Object.entries(query).forEach(([key, value]) => {
@@ -44,7 +42,7 @@ function buildTargetPath(req) {
     if (value !== undefined) params.set(key, String(value))
   })
 
-  return `${EVENTMAKER_PREFIX}/${path}${params.toString() ? `?${params.toString()}` : ''}`
+  return `${EVENTMAKER_PREFIX}/${rawPath}${params.toString() ? `?${params.toString()}` : ''}`
 }
 
 function readRequestBody(req) {
