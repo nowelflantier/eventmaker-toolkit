@@ -40,7 +40,7 @@ export default function ModuleCard({ module, isLast, variant }: ModuleCardProps)
       to={module.route}
     >
       {isLast && (
-        <span className="absolute right-4 top-4 rounded-full bg-[#0066FF] px-2 py-1 text-[10px] font-medium leading-none text-white">
+        <span className="absolute right-4 top-4 rounded-full bg-[#20A599] px-2 py-1 text-[10px] font-medium leading-none text-white">
           Last
         </span>
       )}

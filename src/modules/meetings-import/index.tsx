@@ -18,7 +18,11 @@ import {
 
 const steps = ['Événement', 'Excel', 'Mapping', 'Validation', 'Exécution']
 
-export default function MeetingsImport() {
+interface MeetingsImportProps {
+  onImportComplete: () => void
+}
+
+export default function MeetingsImport({ onImportComplete }: MeetingsImportProps) {
   const [step, setStep] = useState(0)
   const [eventId, setEventId] = useState<string | null>(null)
   const [parsedExcel, setParsedExcel] = useState<ParsedExcel | null>(null)
@@ -83,7 +87,7 @@ export default function MeetingsImport() {
     <main className="mx-auto w-full max-w-6xl px-6 py-8">
       <Stepper currentStep={step} />
       {eventData.event && (
-        <div className="mt-4 border-l-2 border-[#0066FF] bg-white px-4 py-3">
+        <div className="mt-4 border-l-2 border-[#20A599] bg-white px-4 py-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <div>
               <p className="font-mono text-[10px] uppercase text-[#B0ADA8]">Eventmaker event</p>
@@ -153,6 +157,7 @@ export default function MeetingsImport() {
             autoStart={executionAutoStart}
             eventId={eventId}
             rows={matrixRows}
+            onImportComplete={onImportComplete}
             onAutoStartConsumed={() => setExecutionAutoStart(false)}
             onBack={() => setStep(3)}
           />
@@ -174,7 +179,7 @@ function Stepper({ currentStep }: { currentStep: number }) {
               <span
                 className={`flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] ${
                   isCurrent
-                    ? 'bg-[#0066FF] text-white'
+                    ? 'bg-[#20A599] text-white'
                     : isDone
                       ? 'bg-[#22C55E] text-white'
                       : 'bg-[#F0EEE9] text-[#B0ADA8]'

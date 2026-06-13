@@ -1,5 +1,5 @@
-const CREATED_MEETINGS_KEY = 'em_created_meetings'
-const PENDING_MEETINGS_KEY = 'em_pending_meetings'
+const createdMeetingKeys = new Set<string>()
+const pendingMeetingKeys = new Set<string>()
 
 export function buildIdempotencyKey(params: {
   eventId: string
@@ -12,45 +12,26 @@ export function buildIdempotencyKey(params: {
 }
 
 export function getCreatedMeetingKeys(): Set<string> {
-  return readKeySet(CREATED_MEETINGS_KEY)
+  return new Set(createdMeetingKeys)
 }
 
 export function getPendingMeetingKeys(): Set<string> {
-  return readKeySet(PENDING_MEETINGS_KEY)
+  return new Set(pendingMeetingKeys)
 }
 
 export function isMeetingAlreadyHandled(key: string): boolean {
-  return getCreatedMeetingKeys().has(key) || getPendingMeetingKeys().has(key)
+  return createdMeetingKeys.has(key) || pendingMeetingKeys.has(key)
 }
 
 export function markMeetingPending(key: string): void {
-  const keys = getPendingMeetingKeys()
-  keys.add(key)
-  sessionStorage.setItem(PENDING_MEETINGS_KEY, JSON.stringify([...keys]))
+  pendingMeetingKeys.add(key)
 }
 
 export function unmarkMeetingPending(key: string): void {
-  const keys = getPendingMeetingKeys()
-  keys.delete(key)
-  sessionStorage.setItem(PENDING_MEETINGS_KEY, JSON.stringify([...keys]))
+  pendingMeetingKeys.delete(key)
 }
 
 export function markMeetingCreated(key: string): void {
-  const keys = getCreatedMeetingKeys()
-  keys.add(key)
-  sessionStorage.setItem(CREATED_MEETINGS_KEY, JSON.stringify([...keys]))
+  createdMeetingKeys.add(key)
   unmarkMeetingPending(key)
-}
-
-function readKeySet(storageKey: string): Set<string> {
-  const raw = sessionStorage.getItem(storageKey)
-  if (!raw) return new Set()
-
-  try {
-    const parsed = JSON.parse(raw) as string[]
-    return new Set(parsed)
-  } catch {
-    sessionStorage.removeItem(storageKey)
-    return new Set()
-  }
 }

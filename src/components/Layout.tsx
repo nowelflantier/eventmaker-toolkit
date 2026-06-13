@@ -27,8 +27,8 @@ export default function Layout({ children, user }: LayoutProps) {
     <div className="min-h-screen bg-[#F8F7F4]">
       <header className="border-b border-[#E8E4DE]">
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-6">
-          <Link to="/" className="text-base tracking-normal text-[#1A1A1A]">
-            <span className="font-medium">Eventmaker</span>{' '}
+          <Link to="/" className="flex items-center gap-3 text-base tracking-normal text-[#1A1A1A]">
+            <img alt="Eventmaker" className="h-5 w-auto" src="/eventmaker-logo.png" />
             <span className="font-normal text-[#6B6B6B]">Toolkit</span>
           </Link>
           <div className="flex items-center gap-3 text-sm text-[#6B6B6B]">
@@ -36,7 +36,7 @@ export default function Layout({ children, user }: LayoutProps) {
               {user.first_name} {user.last_name}
             </span>
             <button
-              className="rounded-md border border-[#E0DDD8] bg-white px-2 py-1 font-mono text-[11px] text-[#1A1A1A] transition hover:border-[#0066FF] hover:text-[#0066FF]"
+              className="rounded-md border border-[#E0DDD8] bg-white px-2 py-1 font-mono text-[11px] text-[#1A1A1A] transition hover:border-[#20A599] hover:text-[#20A599]"
               onClick={() => setPaletteOpen(true)}
               type="button"
             >

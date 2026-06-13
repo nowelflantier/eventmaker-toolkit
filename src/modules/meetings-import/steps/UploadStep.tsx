@@ -107,7 +107,7 @@ export default function UploadStep({
       </div>
 
       <label
-        className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#D7D2CA] bg-[#F8F7F4] px-6 py-10 text-center transition hover:border-[#0066FF]"
+        className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#D7D2CA] bg-[#F8F7F4] px-6 py-10 text-center transition hover:border-[#20A599]"
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >

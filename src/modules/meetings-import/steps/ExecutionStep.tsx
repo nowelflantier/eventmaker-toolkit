@@ -16,6 +16,7 @@ interface ExecutionStepProps {
   eventId: string
   rows: MatrixRow[]
   autoStart: boolean
+  onImportComplete: () => void
   onAutoStartConsumed: () => void
   onBack: () => void
 }
@@ -26,6 +27,7 @@ export default function ExecutionStep({
   eventId,
   rows,
   autoStart,
+  onImportComplete,
   onAutoStartConsumed,
   onBack,
 }: ExecutionStepProps) {
@@ -52,6 +54,9 @@ export default function ExecutionStep({
       setDone((value) => value + 1)
     })
 
+    if (nextResults.some((result) => result.status === 'created')) {
+      onImportComplete()
+    }
     setRunning(false)
   }
 
@@ -98,7 +103,7 @@ export default function ExecutionStep({
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#F0EEE9]">
           <div
-            className="h-full bg-[#0066FF] transition-all"
+            className="h-full bg-[#20A599] transition-all"
             style={{ width: `${readyRows.length ? (done / readyRows.length) * 100 : 0}%` }}
           />
         </div>

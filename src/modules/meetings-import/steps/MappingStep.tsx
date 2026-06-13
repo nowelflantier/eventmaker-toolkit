@@ -232,7 +232,7 @@ function MappingTable<T>({
                 />
               ) : (
                 <select
-                  className="h-10 w-full rounded-lg border border-[#E0DDD8] bg-white px-2 text-xs outline-none focus:border-[#0066FF] focus:ring-4 focus:ring-[#0066FF]/10"
+                  className="h-10 w-full rounded-lg border border-[#E0DDD8] bg-white px-2 text-xs outline-none focus:border-[#20A599] focus:ring-4 focus:ring-[#20A599]/10"
                   value={entry.target ? targetKey(entry.target) : ''}
                   onChange={(event) => {
                     const target = targets.find((item) => targetKey(item) === event.target.value)
@@ -289,7 +289,7 @@ function SearchableSelect<T>({
     <div className="relative">
       <input
         aria-expanded={open}
-        className="h-10 w-full rounded-lg border border-[#E0DDD8] bg-white px-3 pr-8 text-xs text-[#1A1A1A] outline-none transition placeholder:text-[#B0ADA8] focus:border-[#0066FF] focus:ring-4 focus:ring-[#0066FF]/10"
+        className="h-10 w-full rounded-lg border border-[#E0DDD8] bg-white px-3 pr-8 text-xs text-[#1A1A1A] outline-none transition placeholder:text-[#B0ADA8] focus:border-[#20A599] focus:ring-4 focus:ring-[#20A599]/10"
         onBlur={() => window.setTimeout(() => setOpen(false), 120)}
         onChange={(event) => {
           setQuery(event.target.value)
@@ -353,7 +353,7 @@ function SearchableSelect<T>({
                     <button
                       key={targetKey(target)}
                       className={`block w-full px-3 py-2 text-left text-xs transition hover:bg-[#F8F7F4] ${
-                        selected || active ? 'bg-[#EEF4FF] text-[#0066FF]' : 'text-[#1A1A1A]'
+                        selected || active ? 'bg-[#EAFDF9] text-[#20A599]' : 'text-[#1A1A1A]'
                       }`}
                       onMouseEnter={() => setActiveIndex(optionIndex)}
                       onMouseDown={(event) => event.preventDefault()}

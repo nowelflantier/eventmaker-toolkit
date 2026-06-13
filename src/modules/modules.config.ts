@@ -19,7 +19,7 @@ export const modules: ModuleConfig[] = [
     icon: 'CalendarDays',
     status: 'active',
     route: '/meetings-import',
-    accentBg: '#EEEDFE',
-    accentIcon: '#534AB7',
+    accentBg: '#EAFDF9',
+    accentIcon: '#20A599',
   },
 ]

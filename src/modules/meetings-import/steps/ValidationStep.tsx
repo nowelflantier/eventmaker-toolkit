@@ -71,7 +71,7 @@ export default function ValidationStep({
                 key={item}
                 className={`rounded-full border px-3 py-1 text-xs ${
                   filter === item
-                    ? 'border-[#0066FF] bg-[#0066FF] text-white'
+                    ? 'border-[#20A599] bg-[#20A599] text-white'
                     : 'border-[#E0DDD8] bg-white text-[#6B6B6B]'
                 }`}
                 onClick={() => {

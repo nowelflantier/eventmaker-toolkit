@@ -50,9 +50,10 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F8F7F4] px-4">
       <section className="w-full max-w-sm rounded-xl border border-[#E8E4DE] bg-white p-6 shadow-[0_8px_28px_rgba(0,0,0,0.04)]">
-        <h1 className="text-xl font-medium tracking-normal text-[#1A1A1A]">
-          Eventmaker <span className="font-normal text-[#6B6B6B]">Toolkit</span>
-        </h1>
+        <div className="flex items-center gap-3">
+          <img alt="Eventmaker" className="h-6 w-auto" src="/eventmaker-logo.png" />
+          <span className="text-xl font-normal tracking-normal text-[#6B6B6B]">Toolkit</span>
+        </div>
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-[#1A1A1A]">Token</span>
