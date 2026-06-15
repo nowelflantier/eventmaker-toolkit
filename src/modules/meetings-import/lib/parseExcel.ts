@@ -3,7 +3,7 @@ import { ParsedExcel } from '../types'
 
 export async function parseExcel(file: File): Promise<ParsedExcel> {
   const buffer = await file.arrayBuffer()
-  const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, cellNF: true })
+  const workbook = XLSX.read(buffer, { type: 'array', cellNF: true })
   const firstSheetName = workbook.SheetNames[0]
   if (!firstSheetName) throw new Error('Le fichier ne contient aucune feuille.')
 

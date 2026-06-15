@@ -63,6 +63,9 @@ function parseSlotInput(value: string): Date | null {
 
 function parseSlotParts(value: string): SlotParts | null {
   const normalized = stripSlotSuffix(value)
+  const localIsoParts = parseIsoWithTimezone(normalized)
+  if (localIsoParts) return localIsoParts
+
   const match = normalized.match(
     /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?([+-])?(\d{2})?:?(\d{2})?/,
   )
@@ -74,6 +77,23 @@ function parseSlotParts(value: string): SlotParts | null {
     day: match[3],
     hour: match[4],
     minute: match[5],
+  }
+}
+
+function parseIsoWithTimezone(value: string): SlotParts | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})/.test(value)) {
+    return null
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return null
+
+  return {
+    year: String(parsed.getFullYear()),
+    month: pad(parsed.getMonth() + 1),
+    day: pad(parsed.getDate()),
+    hour: pad(parsed.getHours()),
+    minute: pad(parsed.getMinutes()),
   }
 }
 
@@ -97,6 +117,10 @@ interface SlotParts {
   day: string
   hour: string
   minute: string
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
 }
 
 function makeLocalDate(year: string, month: string, day: string, hour: string, minute: string): Date {
