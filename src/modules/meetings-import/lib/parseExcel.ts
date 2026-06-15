@@ -60,7 +60,12 @@ function formatCell(cell: XLSX.CellObject | undefined, header: string): string {
 
   if (cell.t === 'd' && cell.v instanceof Date) {
     if (kind === 'time') return formatTime(cell.v.getHours(), cell.v.getMinutes())
-    if (kind === 'date') return formatDate(cell.v.getFullYear(), cell.v.getMonth() + 1, cell.v.getDate())
+    if (kind === 'date') {
+      return (
+        normalizeDateText(String(cell.w ?? '')) ??
+        formatDate(cell.v.getUTCFullYear(), cell.v.getUTCMonth() + 1, cell.v.getUTCDate())
+      )
+    }
   }
 
   if (cell.t === 'n' && typeof cell.v === 'number') {
@@ -71,6 +76,7 @@ function formatCell(cell: XLSX.CellObject | undefined, header: string): string {
 
   const value = String(cell.w ?? cell.v ?? '').trim()
   if (kind === 'time') return normalizeTimeText(value)
+  if (kind === 'date') return normalizeDateText(value) ?? value
   return value
 }
 
@@ -90,6 +96,20 @@ function normalizeTimeText(value: string): string {
   if (!match) return value
 
   return formatTime(Number(match[1]), Number(match[2]))
+}
+
+function normalizeDateText(value: string): string | null {
+  const trimmed = value.trim()
+  const frenchLike = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/)
+  if (frenchLike) {
+    const year = frenchLike[3].length === 2 ? `20${frenchLike[3]}` : frenchLike[3]
+    return formatDate(Number(year), Number(frenchLike[2]), Number(frenchLike[1]))
+  }
+
+  const isoLike = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:T.*)?$/)
+  if (isoLike) return formatDate(Number(isoLike[1]), Number(isoLike[2]), Number(isoLike[3]))
+
+  return null
 }
 
 function formatDate(year: number, month: number, day: number): string {
