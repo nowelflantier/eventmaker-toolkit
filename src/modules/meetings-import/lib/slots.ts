@@ -21,7 +21,7 @@ export function formatSlot(slot: EventmakerSlot): string {
 
   const date = formatFrenchDate(start)
   const startTime = `${start.hour}:${start.minute}`
-  const endTime = end && isAfter(start, end) ? `${end.hour}:${end.minute}` : ''
+  const endTime = end && isAfter(end, start) ? `${end.hour}:${end.minute}` : ''
 
   return `${date} · ${startTime}${endTime ? `-${endTime}` : ''}`
 }
@@ -49,18 +49,15 @@ function parseSlotInput(value: string): Date | null {
   const isoLike = normalized.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2})[:h](\d{2})/)
   if (isoLike) return makeLocalDate(isoLike[1], isoLike[2], isoLike[3], isoLike[4], isoLike[5])
 
-  const frLike = normalized.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})(?:\s+|.*?)(\d{1,2})[:h](\d{2})/)
+  const frLike = normalized.match(
+    /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})(?:\s+|.*?)(\d{1,2})\s*[:h]\s*(\d{2})(?::\d{2})?/,
+  )
   if (frLike) {
     const year = frLike[3].length === 2 ? `20${frLike[3]}` : frLike[3]
     return makeLocalDate(year, frLike[2], frLike[1], frLike[4], frLike[5])
   }
 
   const parsed = new Date(normalized)
-  return Number.isNaN(parsed.getTime()) ? null : parsed
-}
-
-function parseDate(value: string): Date | null {
-  const parsed = new Date(stripSlotSuffix(value))
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
@@ -100,10 +97,6 @@ interface SlotParts {
   day: string
   hour: string
   minute: string
-}
-
-function pad(value: number): string {
-  return String(value).padStart(2, '0')
 }
 
 function makeLocalDate(year: string, month: string, day: string, hour: string, minute: string): Date {
