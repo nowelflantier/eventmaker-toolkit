@@ -29,6 +29,7 @@ export default function MeetingsImport({ onImportComplete }: MeetingsImportProps
   const [columnMapping, setColumnMapping] = useState<ColumnMapping | null>(null)
   const [slotMappings, setSlotMappings] = useState<MappingEntry<EventmakerSlot>[]>([])
   const [locationMappings, setLocationMappings] = useState<MappingEntry<EventmakerLocation>[]>([])
+  const [skipNotifications, setSkipNotifications] = useState(false)
   const [matrixRows, setMatrixRows] = useState<MatrixRow[]>([])
   const [validationLoading, setValidationLoading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -73,6 +74,7 @@ export default function MeetingsImport({ onImportComplete }: MeetingsImportProps
           guestResolutions,
           slotMappings: params.slotMappings,
           locationMappings: params.locationMappings,
+          skipNotifications,
         }),
       )
     } catch (err) {
@@ -115,6 +117,8 @@ export default function MeetingsImport({ onImportComplete }: MeetingsImportProps
           <UploadStep
             parsedExcel={parsedExcel}
             columnMapping={columnMapping}
+            skipNotifications={skipNotifications}
+            onSkipNotificationsChange={setSkipNotifications}
             onParsed={handleParsed}
             onBack={() => setStep(0)}
             onContinue={() => setStep(2)}

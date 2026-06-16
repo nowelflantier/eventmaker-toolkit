@@ -20,6 +20,8 @@ type Role = keyof ColumnMapping
 interface UploadStepProps {
   parsedExcel: ParsedExcel | null
   columnMapping: ColumnMapping | null
+  skipNotifications: boolean
+  onSkipNotificationsChange: (skipNotifications: boolean) => void
   onParsed: (parsedExcel: ParsedExcel, columnMapping: ColumnMapping) => void
   onContinue: () => void
   onBack: () => void
@@ -28,6 +30,8 @@ interface UploadStepProps {
 export default function UploadStep({
   parsedExcel,
   columnMapping,
+  skipNotifications,
+  onSkipNotificationsChange,
   onParsed,
   onContinue,
   onBack,
@@ -133,6 +137,24 @@ export default function UploadStep({
 
       {parsedExcel && (
         <div className="mt-6 overflow-x-auto">
+          <div className="mb-5 rounded-lg border border-[#E8E4DE] bg-[#F8F7F4] p-4">
+            <label className="flex items-start gap-3">
+              <input
+                checked={skipNotifications}
+                className="mt-1 size-4 accent-[#20A599]"
+                type="checkbox"
+                onChange={(event) => onSkipNotificationsChange(event.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-medium text-[#1A1A1A]">
+                  Ne pas envoyer de notifications Eventmaker
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-[#6B6B6B]">
+                  Active `skip_notifications` sur les rendez-vous créés par cet import.
+                </span>
+              </span>
+            </label>
+          </div>
           <table className="w-full min-w-[760px] border-collapse text-left text-xs">
             <thead>
               <tr>

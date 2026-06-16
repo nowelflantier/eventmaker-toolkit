@@ -284,6 +284,7 @@ Pour generaliser, creer par exemple `src/components/Stepper.tsx` avec `steps: st
 - Statut: `active`
 - Entree: `src/modules/meetings-import/index.tsx`
 - Workflow: `Evenement -> Excel -> Mapping -> Validation -> Execution`
+- Option Excel: l'utilisateur choisit `skip_notifications` via une checkbox avant validation; cette valeur est transmise au payload de chaque meeting.
 - Endpoints:
   - `GET /events/:eventId.json`
   - `GET /events/:eventId/meetings/slots.json?locale=fr`

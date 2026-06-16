@@ -17,6 +17,7 @@ interface BuildMatrixParams {
   guestResolutions: Map<string, GuestResolution>
   slotMappings: MappingEntry<EventmakerSlot>[]
   locationMappings: MappingEntry<EventmakerLocation>[]
+  skipNotifications: boolean
 }
 
 export function buildMatrix(params: BuildMatrixParams): MatrixRow[] {
@@ -89,6 +90,7 @@ export function buildMatrix(params: BuildMatrixParams): MatrixRow[] {
               guestIds: [guest1Resolution.id, guest2Resolution.id],
               slotId,
               locationId,
+              skipNotifications: params.skipNotifications,
             })
           : null,
       idempotencyKey,
