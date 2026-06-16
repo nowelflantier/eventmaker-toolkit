@@ -237,6 +237,7 @@ Fonction locale actuelle: `downloadReport(results: ExecutionResult[])` dans `src
 - Colonnes: `ligne`, `validation_status`, `execution_status`, `meeting_id`, `error`, `payload`, `idempotency_key`.
 - Fichier: `meetings-import-report.xlsx`.
 - Librairie: `write-excel-file/browser`.
+- Le module `campaign-creator` a aussi un export local `downloadReport(results: ExecutionResult[])` dans `src/modules/campaign-creator/steps/ExecutionStep.tsx`, avec le fichier `campaign-creator-report.xlsx`.
 
 Pour un nouveau module, extraire une fonction partagee seulement si deux modules ont le meme besoin.
 
@@ -298,6 +299,29 @@ Pour generaliser, creer par exemple `src/components/Stepper.tsx` avec `steps: st
   - `normalizeText`, `textMatchScore`
 - Export: rapport Excel d'execution via `write-excel-file`.
 
+### campaign-creator
+
+- Titre: `Création de campagnes`
+- Route: `/campaign-creator`
+- Statut: `active`
+- Entree: `src/modules/campaign-creator/index.tsx`
+- Workflow: `Événement -> Configuration -> Dry-run -> Exécution`
+- Endpoints:
+  - `GET /events/:eventId/accesspoints.json?exclude_exit_accesspoint=true`
+  - `GET /events/:eventId/saved_searches.json?locale=fr`
+  - `POST /fr/events/:eventId/saved_searches.json?locale=fr`
+  - `POST /events/:eventId/guest_campaigns.json?locale=fr`
+  - `GET /events/:eventId/guest_campaigns/:campaignId/deliver.json?locale=fr`
+- Hooks propres:
+  - `useSessionData()`: charge sessions de type `session`, segments existants, et clés de traits.
+  - `useCampaignDryRun(...)`: construit la matrice de campagnes sans POST.
+- Libs propres:
+  - `resolveTemplate(template, session)`
+  - `buildSegmentName(sessionName, prefix)`, `getSavedPrefix()`, `savePrefix(prefix)`
+  - `buildSegmentPayload(session, segmentName)`
+  - `buildCampaignPayload(params)`
+- Export: rapport Excel d'execution via `write-excel-file`.
+
 ## Endpoints Eventmaker documentes
 
 Tous les endpoints sont relatifs a `/api/v1` cote Eventmaker et doivent passer par `apiFetch`.
@@ -309,6 +333,11 @@ Tous les endpoints sont relatifs a `/api/v1` cote Eventmaker et doivent passer p
 | GET | `/events/:eventId/meetings/slots.json?locale=fr` | Charger les creneaux de rendez-vous | `src/modules/meetings-import/hooks/useEventData.ts:36` |
 | GET | `/events/:eventId/guests.json?uid=:uid&documents=false&guest_metadata=false` | Resoudre un guest par UID | `src/modules/meetings-import/hooks/useGuestResolver.ts:45` |
 | POST | `/events/:eventId/meetings/book_by_organizer.json?locale=fr` | Creer un rendez-vous en tant qu'organisateur | `src/modules/meetings-import/steps/ExecutionStep.tsx:177` |
+| GET | `/events/:eventId/accesspoints.json?exclude_exit_accesspoint=true` | Charger les accesspoints puis filtrer `type === "session"` | `src/modules/campaign-creator/hooks/useSessionData.ts` |
+| GET | `/events/:eventId/saved_searches.json?locale=fr` | Charger les segments existants | `src/modules/campaign-creator/hooks/useSessionData.ts` |
+| POST | `/fr/events/:eventId/saved_searches.json?locale=fr` | Creer un segment de campagne si absent | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
+| POST | `/events/:eventId/guest_campaigns.json?locale=fr` | Creer une campagne push en brouillon | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
+| GET | `/events/:eventId/guest_campaigns/:campaignId/deliver.json?locale=fr` | Livrer immediatement une campagne creee en draft | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
 
 ## Proxy Eventmaker
 

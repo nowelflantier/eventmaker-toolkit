@@ -22,4 +22,14 @@ export const modules: ModuleConfig[] = [
     accentBg: '#EAFDF9',
     accentIcon: '#20A599',
   },
+  {
+    id: 'campaign-creator',
+    title: 'Création de campagnes',
+    description: 'Générez des campagnes push en masse depuis les sessions d\'un événement.',
+    icon: 'Megaphone',
+    status: 'active',
+    route: '/campaign-creator',
+    accentBg: '#FEF3EE',
+    accentIcon: '#B74A20',
+  },
 ]

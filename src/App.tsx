@@ -4,6 +4,7 @@ import AuthGate from './components/AuthGate'
 import Layout from './components/Layout'
 import ModuleCard from './components/ModuleCard'
 import { modules } from './modules/modules.config'
+import CampaignCreator from './modules/campaign-creator'
 import MeetingsImport from './modules/meetings-import'
 import {
   getSessionUser,
@@ -70,6 +71,10 @@ export default function App() {
           <Route
             path="/meetings-import"
             element={<MeetingsImport onImportComplete={() => setLastModuleId('meetings-import')} />}
+          />
+          <Route
+            path="/campaign-creator"
+            element={<CampaignCreator onComplete={() => setLastModuleId('campaign-creator')} />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

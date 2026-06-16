@@ -1,12 +1,13 @@
 import { KeyboardEvent, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, LucideIcon, Search } from 'lucide-react'
+import { CalendarDays, LucideIcon, Megaphone, Search } from 'lucide-react'
 import { modules } from '../modules/modules.config'
 import { Dialog, DialogContent } from './ui/Dialog'
 import Input from './ui/Input'
 
 const icons: Record<string, LucideIcon> = {
   CalendarDays,
+  Megaphone,
 }
 
 interface CommandPaletteProps {
