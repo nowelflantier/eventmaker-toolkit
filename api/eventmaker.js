@@ -31,10 +31,11 @@ export default async function handler(req, res) {
 function buildTargetPath(req) {
   const query = req.query || {}
   const rawPath = String(query.path || '').replace(/^\/+/, '')
+  const apiBase = query.api_base === 'app' ? 'app' : 'api'
   const params = new URLSearchParams()
 
   Object.entries(query).forEach(([key, value]) => {
-    if (key === 'path') return
+    if (key === 'path' || key === 'api_base') return
     if (Array.isArray(value)) {
       value.forEach((item) => params.append(key, String(item)))
       return
@@ -42,7 +43,8 @@ function buildTargetPath(req) {
     if (value !== undefined) params.set(key, String(value))
   })
 
-  return `${EVENTMAKER_PREFIX}/${rawPath}${params.toString() ? `?${params.toString()}` : ''}`
+  const prefix = apiBase === 'api' ? EVENTMAKER_PREFIX : ''
+  return `${prefix}/${rawPath}${params.toString() ? `?${params.toString()}` : ''}`
 }
 
 function readRequestBody(req) {

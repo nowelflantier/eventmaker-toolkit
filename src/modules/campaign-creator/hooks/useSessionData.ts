@@ -17,7 +17,9 @@ export function useSessionData() {
         apiFetch<unknown>(
           `/events/${encodeURIComponent(eventId)}/accesspoints.json?exclude_exit_accesspoint=true`,
         ),
-        apiFetch<unknown>(`/events/${encodeURIComponent(eventId)}/saved_searches.json?locale=fr`),
+        apiFetch<unknown>(`/events/${encodeURIComponent(eventId)}/saved_searches.json?locale=fr`, {
+          apiBase: 'app',
+        }),
       ])
       const normalizedSessions = normalizeSessions(sessionsData)
       const normalizedSegments = normalizeSegments(segmentsData)

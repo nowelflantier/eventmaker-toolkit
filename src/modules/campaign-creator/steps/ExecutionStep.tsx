@@ -248,6 +248,7 @@ async function createSegment(eventId: string, row: CampaignMatrixRow): Promise<s
   const response = await apiFetch<unknown>(
     `/fr/events/${encodeURIComponent(eventId)}/saved_searches.json?locale=fr`,
     {
+      apiBase: 'app',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buildSegmentPayload(row.session, row.segmentName)),

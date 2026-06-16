@@ -94,7 +94,9 @@ Regles:
 
 - Ne jamais appeler `https://app.eventmaker.io` directement depuis le navigateur.
 - En dev, `apiFetch` utilise `/api/eventmaker-dev` puis le proxy Vite vers `/api/v1` (`vite.config.ts:8`).
+- En dev avec `apiBase: 'app'`, `apiFetch` utilise `/api/eventmaker-app-dev` puis le proxy Vite vers la racine `https://app.eventmaker.io`.
 - En production, `apiFetch` utilise `/api/eventmaker?path=...` et la fonction Vercel `api/eventmaker.js`.
+- En production avec `apiBase: 'app'`, `apiFetch` ajoute `api_base=app` pour que la fonction Vercel ne prefixe pas la route avec `/api/v1`.
 - Afficher les erreurs API avec au moins `status`, endpoint ou `url`, et extrait de body (`bodyPreview`) quand disponible.
 - Capturer `ApiError` pour enrichir le message utilisateur.
 
@@ -132,7 +134,8 @@ Config demandee pour `campaign-creator`:
 ### `src/lib/api.ts`
 
 - `ApiError extends Error`: contient `details?: { status?: number; contentType?: string | null; bodyPreview?: string; retryAfter?: string | null; url?: string }`.
-- `apiFetch<T>(path: string, options?: RequestInit): Promise<T>`.
+- `apiFetch<T>(path: string, options?: RequestInit & { apiBase?: 'api' | 'app' }): Promise<T>`.
+- Par defaut, `apiBase: 'api'` cible `/api/v1`. Utiliser `apiBase: 'app'` pour les routes Eventmaker hors `/api/v1`, par exemple `/events/:id/saved_searches.json` ou `/fr/events/:id/saved_searches.json`.
 - `verifyToken(token: string): Promise<EventmakerUser>`.
 - `EventmakerUser`: `{ id: string; email: string; first_name: string; last_name: string }`.
 - Gestion d'erreur: `readJsonResponse()` parse toujours le body texte; non-OK ou JSON invalide => `ApiError`.
@@ -324,7 +327,7 @@ Pour generaliser, creer par exemple `src/components/Stepper.tsx` avec `steps: st
 
 ## Endpoints Eventmaker documentes
 
-Tous les endpoints sont relatifs a `/api/v1` cote Eventmaker et doivent passer par `apiFetch`.
+Tous les endpoints doivent passer par `apiFetch`. Par defaut ils sont relatifs a `/api/v1`; les routes marquees `apiBase: "app"` sont relatives a la racine `https://app.eventmaker.io`.
 
 | Methode | Route | Usage | Source |
 | --- | --- | --- | --- |
@@ -334,14 +337,16 @@ Tous les endpoints sont relatifs a `/api/v1` cote Eventmaker et doivent passer p
 | GET | `/events/:eventId/guests.json?uid=:uid&documents=false&guest_metadata=false` | Resoudre un guest par UID | `src/modules/meetings-import/hooks/useGuestResolver.ts:45` |
 | POST | `/events/:eventId/meetings/book_by_organizer.json?locale=fr` | Creer un rendez-vous en tant qu'organisateur | `src/modules/meetings-import/steps/ExecutionStep.tsx:177` |
 | GET | `/events/:eventId/accesspoints.json?exclude_exit_accesspoint=true` | Charger les accesspoints puis filtrer `type === "session"` | `src/modules/campaign-creator/hooks/useSessionData.ts` |
-| GET | `/events/:eventId/saved_searches.json?locale=fr` | Charger les segments existants | `src/modules/campaign-creator/hooks/useSessionData.ts` |
-| POST | `/fr/events/:eventId/saved_searches.json?locale=fr` | Creer un segment de campagne si absent | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
+| GET | `/events/:eventId/saved_searches.json?locale=fr` | Charger les segments existants avec `apiBase: "app"` | `src/modules/campaign-creator/hooks/useSessionData.ts` |
+| POST | `/fr/events/:eventId/saved_searches.json?locale=fr` | Creer un segment de campagne si absent avec `apiBase: "app"` | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
 | POST | `/events/:eventId/guest_campaigns.json?locale=fr` | Creer une campagne push en brouillon | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
 | GET | `/events/:eventId/guest_campaigns/:campaignId/deliver.json?locale=fr` | Livrer immediatement une campagne creee en draft | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
 
 ## Proxy Eventmaker
 
 - Dev: Vite proxy `/api/eventmaker-dev` vers `https://app.eventmaker.io/api/v1`, avec `followRedirects: true`.
+- Dev app routes: Vite proxy `/api/eventmaker-app-dev` vers `https://app.eventmaker.io` sans prefixe `/api/v1`.
 - Prod: Vercel Function `api/eventmaker.js`.
+- Prod app routes: passer `api_base=app` via `apiFetch(..., { apiBase: 'app' })` pour ne pas ajouter `/api/v1`.
 - Le proxy prod preserve methode et body pour les redirects `307`/`308`; pour `301`/`302`/`303`, il bascule en GET.
 - Maximum redirects prod: 5.

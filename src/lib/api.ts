@@ -1,5 +1,12 @@
 const PROD_PROXY = '/api/eventmaker'
 const DEV_PROXY = '/api/eventmaker-dev'
+const DEV_APP_PROXY = '/api/eventmaker-app-dev'
+
+type EventmakerApiBase = 'api' | 'app'
+
+interface EventmakerRequestInit extends RequestInit {
+  apiBase?: EventmakerApiBase
+}
 
 export class ApiError extends Error {
   constructor(
@@ -23,13 +30,14 @@ function getToken(): string {
   return token
 }
 
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+export async function apiFetch<T>(path: string, options?: EventmakerRequestInit): Promise<T> {
   const token = getToken()
-  const url = buildApiUrl(path, token)
+  const { apiBase = 'api', ...requestOptions } = options ?? {}
+  const url = buildApiUrl(path, token, apiBase)
   let res: Response
 
   try {
-    res = await fetch(url, options)
+    res = await fetch(url, requestOptions)
   } catch (err) {
     console.error('Eventmaker API fetch failed', { url, error: err })
     throw new ApiError('API request failed before response', {
@@ -54,7 +62,7 @@ export async function verifyToken(token: string): Promise<EventmakerUser> {
   return readJsonResponse<EventmakerUser>(res, url)
 }
 
-function buildApiUrl(path: string, token: string): string {
+function buildApiUrl(path: string, token: string, apiBase: EventmakerApiBase = 'api'): string {
   const [pathname, query = ''] = path.split('?')
   const params = new URLSearchParams(query)
   const orderedParams = new URLSearchParams()
@@ -65,10 +73,12 @@ function buildApiUrl(path: string, token: string): string {
   })
 
   if (import.meta.env.DEV) {
-    return `${DEV_PROXY}${pathname}?${orderedParams.toString()}`
+    const proxy = apiBase === 'app' ? DEV_APP_PROXY : DEV_PROXY
+    return `${proxy}${pathname}?${orderedParams.toString()}`
   }
 
   orderedParams.set('path', pathname.replace(/^\/+/, ''))
+  if (apiBase === 'app') orderedParams.set('api_base', 'app')
   return `${PROD_PROXY}?${orderedParams.toString()}`
 }
 

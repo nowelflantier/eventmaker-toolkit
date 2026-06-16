@@ -12,6 +12,13 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/api\/eventmaker-dev/, '/api/v1'),
       },
+      '/api/eventmaker-app-dev': {
+        target: 'https://app.eventmaker.io',
+        changeOrigin: true,
+        followRedirects: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/eventmaker-app-dev/, ''),
+      },
     },
   },
 })
