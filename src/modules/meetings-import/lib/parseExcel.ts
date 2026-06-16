@@ -1,14 +1,9 @@
-import * as XLSX from 'xlsx'
+import { readSheet, Row } from 'read-excel-file/browser'
 import { ParsedExcel } from '../types'
 
 export async function parseExcel(file: File): Promise<ParsedExcel> {
-  const buffer = await file.arrayBuffer()
-  const workbook = XLSX.read(buffer, { type: 'array', cellNF: true })
-  const firstSheetName = workbook.SheetNames[0]
-  if (!firstSheetName) throw new Error('Le fichier ne contient aucune feuille.')
-
-  const sheet = workbook.Sheets[firstSheetName]
-  const matrix = readMatrix(sheet)
+  const matrix = await readSheet(file)
+  if (matrix.length === 0) throw new Error('Le fichier ne contient aucune feuille.')
 
   const headerRow = matrix[0] ?? []
   const headers = headerRow
@@ -33,48 +28,25 @@ export async function parseExcel(file: File): Promise<ParsedExcel> {
   return { headers, rows }
 }
 
-function readMatrix(sheet: XLSX.WorkSheet): (XLSX.CellObject | undefined)[][] {
-  const ref = sheet['!ref']
-  if (!ref) return []
-
-  const range = XLSX.utils.decode_range(ref)
-  const rows: (XLSX.CellObject | undefined)[][] = []
-
-  for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex += 1) {
-    const row: (XLSX.CellObject | undefined)[] = []
-
-    for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex += 1) {
-      row.push(sheet[XLSX.utils.encode_cell({ r: rowIndex, c: colIndex })])
-    }
-
-    rows.push(row)
-  }
-
-  return rows
-}
-
-function formatCell(cell: XLSX.CellObject | undefined, header: string): string {
-  if (!cell) return ''
+function formatCell(cell: Row[number] | undefined, header: string): string {
+  if (cell === null || cell === undefined) return ''
 
   const kind = detectColumnKind(header)
 
-  if (cell.t === 'd' && cell.v instanceof Date) {
-    if (kind === 'time') return formatTime(cell.v.getHours(), cell.v.getMinutes())
+  if (cell instanceof Date) {
+    if (kind === 'time') return formatTime(cell.getHours(), cell.getMinutes())
     if (kind === 'date') {
-      return (
-        normalizeDateText(String(cell.w ?? '')) ??
-        formatDate(cell.v.getUTCFullYear(), cell.v.getUTCMonth() + 1, cell.v.getUTCDate())
-      )
+      return formatDate(cell.getFullYear(), cell.getMonth() + 1, cell.getDate())
     }
   }
 
-  if (cell.t === 'n' && typeof cell.v === 'number') {
-    const parsed = XLSX.SSF.parse_date_code(cell.v)
-    if (parsed && kind === 'date') return formatDate(parsed.y, parsed.m, parsed.d)
-    if (parsed && kind === 'time') return formatTime(parsed.H, parsed.M)
+  if (typeof cell === 'number') {
+    const parsed = parseExcelSerialDate(cell)
+    if (parsed && kind === 'date') return formatDate(parsed.year, parsed.month, parsed.day)
+    if (parsed && kind === 'time') return formatTime(parsed.hour, parsed.minute)
   }
 
-  const value = String(cell.w ?? cell.v ?? '').trim()
+  const value = String(cell).trim()
   if (kind === 'time') return normalizeTimeText(value)
   if (kind === 'date') return normalizeDateText(value) ?? value
   return value
@@ -118,6 +90,30 @@ function formatDate(year: number, month: number, day: number): string {
 
 function formatTime(hour: number, minute: number): string {
   return `${pad(hour)}:${pad(minute)}`
+}
+
+function parseExcelSerialDate(value: number): {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+} | null {
+  if (!Number.isFinite(value) || value < 0) return null
+
+  const wholeDays = Math.floor(value)
+  const dayMs = 24 * 60 * 60 * 1000
+  const excelEpoch = Date.UTC(1899, 11, 30)
+  const date = new Date(excelEpoch + wholeDays * dayMs)
+  const totalMinutes = Math.round((value - wholeDays) * 24 * 60)
+
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+    hour: Math.floor(totalMinutes / 60) % 24,
+    minute: totalMinutes % 60,
+  }
 }
 
 function pad(value: number): string {

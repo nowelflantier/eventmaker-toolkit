@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import * as XLSX from 'xlsx'
+import writeXlsxFile, { Row } from 'write-excel-file/browser'
 import Alert from '../../../components/ui/Alert'
 import Button from '../../../components/ui/Button'
 import { ApiError, apiFetch } from '../../../lib/api'
@@ -115,7 +115,7 @@ export default function ExecutionStep({
             <p className="font-mono text-xs text-[#6B6B6B]">
               {summary.created} créés · {summary.failed} échoués · {summary.skipped} ignorés
             </p>
-            <Button variant="ghost" onClick={() => downloadReport(results)}>
+            <Button variant="ghost" onClick={() => void downloadReport(results)}>
               Télécharger le rapport
             </Button>
           </div>
@@ -267,7 +267,7 @@ function ExecutionBadge({ status }: { status: ExecutionResult['status'] }) {
   return <span className={`rounded-full border px-2 py-1 font-mono text-[10px] ${classes[status]}`}>{status}</span>
 }
 
-function downloadReport(results: ExecutionResult[]) {
+async function downloadReport(results: ExecutionResult[]) {
   const rows = results.map((result) => ({
     ligne: result.row.rowIndex,
     validation_status: result.row.status,
@@ -277,8 +277,19 @@ function downloadReport(results: ExecutionResult[]) {
     payload: result.row.payload ? JSON.stringify(result.row.payload) : '',
     idempotency_key: result.row.idempotencyKey ?? '',
   }))
-  const sheet = XLSX.utils.json_to_sheet(rows)
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, sheet, 'Rapport')
-  XLSX.writeFile(workbook, 'meetings-import-report.xlsx')
+  const headers = [
+    'ligne',
+    'validation_status',
+    'execution_status',
+    'meeting_id',
+    'error',
+    'payload',
+    'idempotency_key',
+  ] as const
+  const sheet: Row[] = [
+    headers.map((header) => ({ value: header, fontWeight: 'bold' })),
+    ...rows.map((row) => headers.map((header) => row[header])),
+  ]
+
+  await writeXlsxFile(sheet, { sheet: 'Rapport' }).toFile('meetings-import-report.xlsx')
 }

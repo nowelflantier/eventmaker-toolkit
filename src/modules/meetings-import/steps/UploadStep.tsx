@@ -49,8 +49,8 @@ export default function UploadStep({
 
   async function handleFile(file: File) {
     setError(null)
-    if (!/\.(xlsx|xls)$/i.test(file.name)) {
-      setError('Format invalide. Sélectionnez un fichier .xlsx ou .xls.')
+    if (!/\.xlsx$/i.test(file.name)) {
+      setError('Format invalide. Sélectionnez un fichier .xlsx.')
       return
     }
 
@@ -111,7 +111,7 @@ export default function UploadStep({
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
-        <input accept=".xlsx,.xls" className="hidden" type="file" onChange={handleInputChange} />
+        <input accept=".xlsx" className="hidden" type="file" onChange={handleInputChange} />
         <span className="text-sm font-medium text-[#1A1A1A]">Déposer un fichier Excel</span>
         <span className="mt-1 text-xs text-[#6B6B6B]">ou cliquer pour sélectionner un fichier</span>
       </label>
