@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
-import { CalendarDays, LucideIcon, Megaphone } from 'lucide-react'
+import { CalendarDays, LucideIcon, Megaphone, Trash2 } from 'lucide-react'
 import { ModuleConfig } from '../modules/modules.config'
 
 const icons: Record<string, LucideIcon> = {
   CalendarDays,
   Megaphone,
+  Trash2,
 }
 
 interface ModuleCardProps {

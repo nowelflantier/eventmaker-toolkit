@@ -96,6 +96,8 @@ async function readJsonResponse<T>(res: Response, url: string): Promise<T> {
     })
   }
 
+  if (!body.trim()) return undefined as T
+
   try {
     return JSON.parse(body) as T
   } catch {

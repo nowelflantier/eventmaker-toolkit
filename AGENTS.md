@@ -326,6 +326,23 @@ Pour generaliser, creer par exemple `src/components/Stepper.tsx` avec `steps: st
   - `buildCampaignPayload(params)`
 - Export: rapport Excel d'execution via `write-excel-file`.
 
+### session-cleaner
+
+- Titre: `Suppression des sessions`
+- Route: `/session-cleaner`
+- Statut: `active`
+- Entree: `src/modules/session-cleaner/index.tsx`
+- Workflow: `Événement -> Vérification -> Suppression`
+- Endpoints:
+  - `GET /events/:eventId/accesspoints.json?exclude_exit_accesspoint=true`
+  - `DELETE /events/:eventId/accesspoints/:accesspointId.json`
+- Hooks propres:
+  - `useAccesspoints()`: charge les accesspoints puis filtre les objets `type === "session"` avec identifiant exploitable.
+- Sécurité:
+  - La suppression n'est jamais automatique après saisie de l'événement.
+  - L'utilisateur doit confirmer explicitement après avoir vu la liste des sessions.
+  - L'exécution utilise une concurrence limitée à 3 et affiche un résultat par session.
+
 ## Endpoints Eventmaker documentes
 
 Tous les endpoints doivent passer par `apiFetch`. Par defaut ils sont relatifs a `/api/v1`; les routes marquees `apiBase: "app"` sont relatives a la racine `https://app.eventmaker.io`.
@@ -342,6 +359,7 @@ Tous les endpoints doivent passer par `apiFetch`. Par defaut ils sont relatifs a
 | POST | `/fr/events/:eventId/saved_searches.json?locale=fr` | Creer un segment de campagne si absent avec `apiBase: "app"` | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
 | POST | `/events/:eventId/guest_campaigns.json?locale=fr` | Creer une campagne push en brouillon | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
 | GET | `/events/:eventId/guest_campaigns/:campaignId/deliver.json?locale=fr` | Livrer immediatement une campagne creee en draft | `src/modules/campaign-creator/steps/ExecutionStep.tsx` |
+| DELETE | `/events/:eventId/accesspoints/:accesspointId.json` | Supprimer un accesspoint session apres confirmation | `src/modules/session-cleaner/steps/ExecutionStep.tsx` |
 
 ## Proxy Eventmaker
 

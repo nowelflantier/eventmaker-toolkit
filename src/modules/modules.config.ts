@@ -32,4 +32,14 @@ export const modules: ModuleConfig[] = [
     accentBg: '#FEF3EE',
     accentIcon: '#B74A20',
   },
+  {
+    id: 'session-cleaner',
+    title: 'Suppression des sessions',
+    description: 'Supprimez tous les accesspoints session d’un événement.',
+    icon: 'Trash2',
+    status: 'active',
+    route: '/session-cleaner',
+    accentBg: '#FEECEC',
+    accentIcon: '#B91C1C',
+  },
 ]

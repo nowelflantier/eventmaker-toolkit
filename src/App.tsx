@@ -6,6 +6,7 @@ import ModuleCard from './components/ModuleCard'
 import { modules } from './modules/modules.config'
 import CampaignCreator from './modules/campaign-creator'
 import MeetingsImport from './modules/meetings-import'
+import SessionCleaner from './modules/session-cleaner'
 import {
   getSessionUser,
   SessionUser,
@@ -75,6 +76,10 @@ export default function App() {
           <Route
             path="/campaign-creator"
             element={<CampaignCreator onComplete={() => setLastModuleId('campaign-creator')} />}
+          />
+          <Route
+            path="/session-cleaner"
+            element={<SessionCleaner onComplete={() => setLastModuleId('session-cleaner')} />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
