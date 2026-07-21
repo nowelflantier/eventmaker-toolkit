@@ -25,7 +25,9 @@ export interface GuestFieldDefinition {
   label: string
   type: string
   storage: GuestFieldStorage
-  booleanLike: boolean
+  hasAvailableValues: boolean
+  allowMultipleValues: boolean
+  textLike: boolean
 }
 
 export interface GuestDrawEventData {
