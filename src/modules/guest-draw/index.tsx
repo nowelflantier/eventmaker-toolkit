@@ -128,11 +128,12 @@ export default function GuestDraw({ onComplete }: GuestDrawProps) {
 }
 
 function buildInitialConfiguration(data: GuestDrawEventData): DrawConfiguration {
-  const booleanField = data.fields.find((field) => field.booleanLike)
-  const firstField = booleanField ?? data.fields[0]
+  const firstTextField = data.fields.find(
+    (field) => field.storage === 'guest_metadata' && field.textLike,
+  )
 
   return {
     ...initialConfiguration,
-    targetFieldKey: firstField?.key ?? '',
+    targetFieldKey: firstTextField?.key ?? '',
   }
 }
