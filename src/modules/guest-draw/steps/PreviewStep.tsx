@@ -21,6 +21,7 @@ interface PreviewStepProps {
   onLoad: () => Promise<void>
   onCancel: () => void
   onBack: () => void
+  onContinue: () => void
 }
 
 export default function PreviewStep({
@@ -35,6 +36,7 @@ export default function PreviewStep({
   onLoad,
   onCancel,
   onBack,
+  onContinue,
 }: PreviewStepProps) {
   const selectedCategories = categories.filter((category) =>
     configuration.categoryIds.includes(category.id),
@@ -45,6 +47,10 @@ export default function PreviewStep({
   const currentTrueCount = result?.guests.filter((guest) => isTrueValue(guest.targetValue)).length ?? 0
   const insufficientPopulation =
     result !== null && result.guests.length < configuration.winnerCount
+  const canContinue =
+    result !== null &&
+    !insufficientPopulation &&
+    (configuration.mode !== 'segment' || result.segmentFilterVerified)
 
   async function handleLoad() {
     try {
@@ -200,11 +206,18 @@ export default function PreviewStep({
         <Button disabled={loading} onClick={onBack} variant="ghost">
           Retour à la configuration
         </Button>
-        {result && (
-          <Button disabled={loading} onClick={() => void handleLoad()} variant="ghost">
-            Recharger
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {result && (
+            <Button disabled={loading} onClick={() => void handleLoad()} variant="ghost">
+              Recharger
+            </Button>
+          )}
+          {canContinue && (
+            <Button disabled={loading} onClick={onContinue}>
+              Préparer le tirage
+            </Button>
+          )}
+        </div>
       </div>
     </section>
   )
