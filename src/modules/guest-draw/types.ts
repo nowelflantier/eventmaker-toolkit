@@ -51,6 +51,7 @@ export interface DrawGuest {
   guestCategoryId: string
   guestMetadata: GuestMetadataEntry[]
   guestMetadataMap: Record<string, unknown>
+  metadataIncluded: boolean
   targetValue: unknown
 }
 
@@ -73,4 +74,41 @@ export interface GuestPopulationResult {
   guestsWithMetadata: number
   warnings: string[]
   segmentFilterVerified: boolean
+}
+
+export type DrawTargetValue = 'true' | 'false'
+
+export interface DrawUpdatePlan {
+  guest: DrawGuest
+  currentValue: unknown
+  targetValue: DrawTargetValue
+  guestMetadata: GuestMetadataEntry[]
+}
+
+export interface GuestDrawPlan {
+  winners: DrawGuest[]
+  updates: DrawUpdatePlan[]
+  existingTrueCount: number
+  totalGuestsScanned: number
+  detailedGuestsLoaded: number
+}
+
+export interface DrawPreparationProgress {
+  stage: 'idle' | 'loading_guests' | 'loading_details' | 'ready'
+  completed: number
+  total: number
+}
+
+export type DrawExecutionStatus = 'updated' | 'failed'
+
+export interface DrawExecutionResult {
+  guestId: string
+  targetValue: DrawTargetValue
+  status: DrawExecutionStatus
+  error: string | null
+}
+
+export interface DrawExecutionProgress {
+  completed: number
+  total: number
 }
