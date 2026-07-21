@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import ModuleCard from './components/ModuleCard'
 import { modules } from './modules/modules.config'
 import CampaignCreator from './modules/campaign-creator'
+import GuestDraw from './modules/guest-draw'
 import MeetingsImport from './modules/meetings-import'
 import SessionCleaner from './modules/session-cleaner'
 import {
@@ -80,6 +81,10 @@ export default function App() {
           <Route
             path="/session-cleaner"
             element={<SessionCleaner onComplete={() => setLastModuleId('session-cleaner')} />}
+          />
+          <Route
+            path="/guest-draw"
+            element={<GuestDraw onComplete={() => setLastModuleId('guest-draw')} />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
