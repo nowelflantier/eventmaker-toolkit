@@ -1,90 +1,83 @@
 # Guest draw module
 
-## Current status
+## Workflow
 
-The `guest-draw` module is currently read-only.
+`Événement -> Configuration -> Aperçu -> Tirage`
 
-Workflow:
-
-`Événement -> Configuration -> Aperçu`
-
-No participant is updated and no draw is persisted at this stage.
+The module supports a full draw with an explicit confirmation before Eventmaker writes.
 
 ## V1 functional decisions
 
-- Population can be selected through:
+- Eligible population is selected through:
   - one or more guest categories combined with OR;
   - or one saved segment.
 - Categories and segment cannot be combined.
 - Only one segment can be selected.
-- The number of expected winners must be a positive integer.
-- The target field is resolved from the event `guest_fields` configuration.
-- Custom fields nested below a `guest_metadata` container are normalized as metadata fields.
-- Boolean-like fields are preferred when the API exposes a usable type.
+- The target is a custom text field without configured values.
+- Winners receive the text value `true`.
+- Previous winners who are not selected receive the text value `false`.
+- Existing `true` values are searched across the whole event, including guests outside the eligible population.
 
 ## Eventmaker endpoints
 
 All calls use `apiFetch`.
 
 - `GET /events/:eventId.json`
-  - event name and guest count;
-  - guest field definitions when exposed by the event response.
+  - event name and guest count.
+- `GET /events/:eventId/guest_fields.json`
+  - target field definitions.
 - `GET /events/:eventId/guest_categories.json`
   - available guest categories.
 - `GET /events/:eventId/saved_searches.json?locale=fr` with `apiBase: "app"`
   - available saved segments.
 - `GET /events/:eventId/guests.json?page=:page&documents=false&guest_metadata=true`
-  - paginated guest loading;
-  - categories use repeated `category[]` query parameters;
-  - segment mode currently uses an isolated `saved_search_id` parameter that must be validated against a real Eventmaker event.
+  - paginated guest loading.
+- `GET /events/:eventId/guests/:guestId.json?guest_metadata=true`
+  - fallback when the paginated response does not include metadata.
+- `PUT /events/:eventId/guests/:guestId.json`
+  - update the complete `guest_metadata` array.
 
-## Pagination
+## Safety
 
-- Starts at page 1.
-- Continues until Eventmaker returns an empty page.
-- Guests are deduplicated by persistent guest id.
-- Only the data required by the preview and the future update plan is retained.
-- Loading can be cancelled with `AbortController`.
-- A safety limit prevents an infinite pagination loop.
+- The random result is frozen before confirmation.
+- Random selection uses `crypto.getRandomValues`.
+- No write occurs before the confirmation checkbox is selected.
+- The complete metadata array is preserved because Eventmaker replaces, rather than appends, `guest_metadata` on update.
+- Only guests whose target value changes are updated.
+- Writes use bounded concurrency.
+- Failures remain visible and can be retried without replaying successful updates.
+- Preparation can be cancelled.
+- Pagination has a safety limit.
 
 ## Validation checklist
 
-### Event loading
+### Event and configuration
 
-- Event title is displayed.
-- Guest count is displayed when returned.
-- Guest categories are listed.
-- Saved segments are listed.
-- Native and custom guest fields are listed.
-- Fields nested in `guest_metadata` are visible.
+- Event title, categories, segments and target text fields load correctly.
+- Value-list and multiple-value fields are not offered as targets.
+- One or multiple categories can be selected.
+- A single segment can be selected.
 
-### Category population
+### Preview
 
-- One category returns the same count as Eventmaker.
-- Multiple categories return the union of guests, without duplicates.
-- A participant belonging to the selected categories appears once.
+- The eligible count matches Eventmaker.
+- Multiple categories return the expected union without duplicates.
 - Pagination works beyond 500 guests.
+- A segment mismatch blocks the draw.
 
-### Segment population
+### Draw plan
 
-- The selected segment count matches Eventmaker.
-- The displayed sample contains only expected guests.
-- If no segment count is returned, the UI clearly marks the filter as unverified.
-- A mismatch blocks the future write phase.
+- The requested number of winners is displayed.
+- Re-running the draw changes the frozen result before execution.
+- Previous winners are detected across the whole event.
+- The plan shows how many guests move to `true` and to `false`.
+- Other guest metadata values remain unchanged in every payload.
 
-### Guest metadata
+### Execution
 
-- The selected target field is visible.
-- Existing values are shown in the sample when returned by the list endpoint.
-- If metadata is absent from paginated results, the UI warns that detailed guest reads will be required before updates.
-
-## Next implementation phase
-
-After the read-only behavior is validated:
-
-1. build the secure random draw from the loaded candidate pool;
-2. freeze the result in the current session;
-3. build a dry-run update plan;
-4. set winners to true and previous winners to false;
-5. update only guests whose target value changes;
-6. execute with limited concurrency and a retryable failure report.
+- No request is sent before explicit confirmation.
+- Successful updates return HTTP 204.
+- Winners contain the text value `true`.
+- Previous non-selected winners contain the text value `false`.
+- Unchanged participants are not updated.
+- Failed updates can be retried independently.
