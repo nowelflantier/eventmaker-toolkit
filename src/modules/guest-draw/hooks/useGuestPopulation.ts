@@ -74,26 +74,21 @@ export function useGuestPopulation() {
           (guest) => Object.keys(guest.guestMetadataMap).length > 0,
         ).length
         const warnings: string[] = []
-        let segmentFilterVerified = params.configuration.mode !== 'segment'
 
-        if (params.configuration.mode === 'segment') {
-          const expectedCount = params.expectedSegmentCount
-          if (expectedCount === null || expectedCount === undefined) {
-            warnings.push(
-              'Le segment ne fournit pas de compteur permettant de confirmer automatiquement le filtrage. Vérifiez l’échantillon avant de poursuivre.',
-            )
-          } else if (expectedCount !== guests.length) {
-            warnings.push(
-              `Le segment annonce ${expectedCount} participant(s), mais l’API en a retourné ${guests.length}. Le filtre segment doit être vérifié avant toute écriture.`,
-            )
-          } else {
-            segmentFilterVerified = true
-          }
+        if (
+          params.configuration.mode === 'segment' &&
+          params.expectedSegmentCount !== null &&
+          params.expectedSegmentCount !== undefined &&
+          params.expectedSegmentCount !== guests.length
+        ) {
+          warnings.push(
+            `Le segment contient ${params.expectedSegmentCount} participant(s), mais ${guests.length} ont été chargés. Contrôlez la population affichée avant de lancer le tirage.`,
+          )
         }
 
         if (guests.length > 0 && guestsWithMetadata === 0) {
           warnings.push(
-            'Aucune guest_metadata n’est présente dans la liste paginée. Une lecture détaillée des participants sera nécessaire avant la phase de mise à jour.',
+            'Les valeurs actuelles du champ cible ne sont pas disponibles dans cet aperçu. Elles seront relues avant la mise à jour.',
           )
         }
 
@@ -102,7 +97,6 @@ export function useGuestPopulation() {
           pagesLoaded: Math.max(page - 1, 0),
           guestsWithMetadata,
           warnings,
-          segmentFilterVerified,
         }
 
         setResult(nextResult)
@@ -158,8 +152,6 @@ function buildGuestListPath(
       params.append('category[]', categoryId)
     })
   } else if (configuration.segmentId) {
-    // Cette convention n'est pas documentée publiquement par Eventmaker.
-    // Elle reste volontairement isolée ici pour pouvoir être ajustée sans toucher au workflow.
     params.set('saved_search_id', configuration.segmentId)
   }
 
