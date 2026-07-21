@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import Stepper from '../../components/Stepper'
 import { useGuestDrawData } from './hooks/useGuestDrawData'
+import { useGuestDrawExecution } from './hooks/useGuestDrawExecution'
 import { useGuestPopulation } from './hooks/useGuestPopulation'
 import ConfigurationStep from './steps/ConfigurationStep'
+import DrawStep from './steps/DrawStep'
 import EventSelector from './steps/EventSelector'
 import PreviewStep from './steps/PreviewStep'
 import { DrawConfiguration, GuestDrawEventData } from './types'
 
-const steps = ['Événement', 'Configuration', 'Aperçu']
+const steps = ['Événement', 'Configuration', 'Aperçu', 'Tirage']
 const accentColor = '#6D4CC9'
 
 interface GuestDrawProps {
@@ -28,12 +30,14 @@ export default function GuestDraw({ onComplete }: GuestDrawProps) {
   const [configuration, setConfiguration] = useState<DrawConfiguration>(initialConfiguration)
   const eventData = useGuestDrawData()
   const population = useGuestPopulation()
+  const execution = useGuestDrawExecution()
 
   async function handleEventSubmit(nextEventId: string) {
     const loadedData = await eventData.loadData(nextEventId)
     setEventId(nextEventId)
     setConfiguration(buildInitialConfiguration(loadedData))
     population.reset()
+    execution.reset()
     setStep(1)
   }
 
@@ -48,7 +52,31 @@ export default function GuestDraw({ onComplete }: GuestDrawProps) {
       configuration,
       expectedSegmentCount: segment?.guestCount,
     })
+  }
+
+  async function prepareDraw() {
+    if (!eventId || !population.result) return
+    await execution.prepare({
+      eventId,
+      eligibleGuests: population.result.guests,
+      configuration,
+    })
+  }
+
+  function handleDrawContinue() {
+    setStep(3)
+    void prepareDraw().catch(() => undefined)
+  }
+
+  async function handleExecute() {
+    if (!eventId) return
+    await execution.execute(eventId)
     onComplete()
+  }
+
+  async function handleRetryFailed() {
+    if (!eventId) return
+    await execution.retryFailed(eventId)
   }
 
   const data = eventData.data
@@ -95,9 +123,11 @@ export default function GuestDraw({ onComplete }: GuestDrawProps) {
             onChange={(nextConfiguration) => {
               setConfiguration(nextConfiguration)
               population.reset()
+              execution.reset()
             }}
             onContinue={() => {
               population.reset()
+              execution.reset()
               setStep(2)
             }}
             segments={data.segments}
@@ -113,13 +143,35 @@ export default function GuestDraw({ onComplete }: GuestDrawProps) {
             loading={population.loading}
             onBack={() => {
               population.cancel()
+              execution.reset()
               setStep(1)
             }}
             onCancel={population.cancel}
+            onContinue={handleDrawContinue}
             onLoad={handlePopulationLoad}
             progress={population.progress}
             result={population.result}
             segments={data.segments}
+          />
+        )}
+
+        {step === 3 && eventId && (
+          <DrawStep
+            error={execution.error}
+            executing={execution.executing}
+            executionProgress={execution.executionProgress}
+            onBack={() => {
+              execution.cancelPreparation()
+              setStep(2)
+            }}
+            onCancelPreparation={execution.cancelPreparation}
+            onExecute={handleExecute}
+            onReroll={prepareDraw}
+            onRetryFailed={handleRetryFailed}
+            plan={execution.plan}
+            preparationProgress={execution.preparationProgress}
+            preparing={execution.preparing}
+            results={execution.results}
           />
         )}
       </div>
