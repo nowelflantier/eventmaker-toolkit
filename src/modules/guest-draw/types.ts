@@ -49,6 +49,7 @@ export interface DrawGuest {
   guestCategoryId: string
   guestMetadata: GuestMetadataEntry[]
   guestMetadataMap: Record<string, unknown>
+  targetValue: unknown
 }
 
 export interface DrawConfiguration {
