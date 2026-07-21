@@ -42,6 +42,7 @@ export default function PreviewStep({
   const selectedSegment = segments.find((segment) => segment.id === configuration.segmentId)
   const selectedField = fields.find((field) => field.key === configuration.targetFieldKey)
   const visibleGuests = result?.guests.slice(0, 25) ?? []
+  const currentTrueCount = result?.guests.filter((guest) => isTrueValue(guest.targetValue)).length ?? 0
   const insufficientPopulation =
     result !== null && result.guests.length < configuration.winnerCount
 
@@ -117,20 +118,10 @@ export default function PreviewStep({
 
       {result && (
         <>
-          <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
             <Metric label="Participants éligibles" value={result.guests.length} />
-            <Metric label="Pages chargées" value={result.pagesLoaded} />
-            <Metric label="Avec guest_metadata" value={result.guestsWithMetadata} />
-            <Metric
-              label="Filtre"
-              value={
-                configuration.mode === 'segment'
-                  ? result.segmentFilterVerified
-                    ? 'Vérifié'
-                    : 'À vérifier'
-                  : 'Catégories API'
-              }
-            />
+            <Metric label="Gagnants prévus" value={configuration.winnerCount} />
+            <Metric label="Déjà à true" value={currentTrueCount} />
           </div>
 
           {insufficientPopulation && (
@@ -235,6 +226,12 @@ function Metric({ label, value }: { label: string; value: string | number }) {
       <p className="mt-2 text-lg font-medium text-[#1A1A1A]">{value}</p>
     </div>
   )
+}
+
+function isTrueValue(value: unknown): boolean {
+  if (value === true || value === 1) return true
+  if (typeof value !== 'string') return false
+  return ['true', '1', 'yes', 'oui'].includes(value.trim().toLowerCase())
 }
 
 function formatValue(value: unknown): string {
