@@ -51,7 +51,7 @@ export interface DrawGuest {
   guestCategoryId: string
   guestMetadata: GuestMetadataEntry[]
   guestMetadataMap: Record<string, unknown>
-  metadataIncluded: boolean
+  metadataIncluded?: boolean
   targetValue: unknown
 }
 
