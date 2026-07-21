@@ -149,7 +149,9 @@ function normalizeGuestField(data: unknown): GuestFieldDefinition | null {
       label: key,
       type: '',
       storage: nativeGuestFields.has(key) ? 'native' : 'guest_metadata',
-      booleanLike: false,
+      hasAvailableValues: false,
+      allowMultipleValues: false,
+      textLike: true,
     }
   }
 
@@ -180,6 +182,12 @@ function normalizeGuestField(data: unknown): GuestFieldDefinition | null {
     stringValue(field.control_type) ||
     stringValue(field.widget) ||
     stringValue(field.kind)
+  const availableValues =
+    readArray(field, ['available_values', 'availableValues', 'values', 'options', 'choices']) ?? []
+  const hasAvailableValues = availableValues.length > 0
+  const allowMultipleValues = Boolean(
+    field.allow_multiple_values ?? field.allowMultipleValues ?? field.multiple,
+  )
   const hasCustomId = Boolean(stringValue(field._id) || stringValue(field.id))
 
   return {
@@ -187,25 +195,26 @@ function normalizeGuestField(data: unknown): GuestFieldDefinition | null {
     label,
     type,
     storage: nativeGuestFields.has(key) && !hasCustomId ? 'native' : 'guest_metadata',
-    booleanLike: isBooleanLikeField(field, type),
+    hasAvailableValues,
+    allowMultipleValues,
+    textLike: isTextLikeField(type, hasAvailableValues, allowMultipleValues),
   }
 }
 
-function isBooleanLikeField(field: Record<string, unknown>, type: string): boolean {
-  const normalizedType = type.toLowerCase()
-  if (/checkbox|boolean|bool|switch|toggle/.test(normalizedType)) return true
+function isTextLikeField(
+  type: string,
+  hasAvailableValues: boolean,
+  allowMultipleValues: boolean,
+): boolean {
+  if (hasAvailableValues || allowMultipleValues) return false
 
-  const values =
-    readArray(field, ['available_values', 'availableValues', 'values', 'options', 'choices']) ?? []
-  const normalizedValues = values
-    .map((value) => {
-      const item = asRecord(value)
-      return String(item.value ?? item.id ?? item.name ?? value).trim().toLowerCase()
-    })
-    .filter(Boolean)
-  const booleanValues = new Set(['0', '1', 'true', 'false', 'yes', 'no', 'oui', 'non'])
+  const normalizedType = type.trim().toLowerCase()
+  if (!normalizedType) return true
+  if (/select|list|choice|radio|checkbox|boolean|calculated|number|date|file|image/.test(normalizedType)) {
+    return false
+  }
 
-  return normalizedValues.length > 0 && normalizedValues.every((value) => booleanValues.has(value))
+  return /text|string|textarea|short_text|long_text/.test(normalizedType)
 }
 
 function dedupeById<T extends { id: string }>(items: T[]): T[] {
