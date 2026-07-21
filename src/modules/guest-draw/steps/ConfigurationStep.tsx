@@ -30,12 +30,14 @@ export default function ConfigurationStep({
 }: ConfigurationStepProps) {
   const [populationSearch, setPopulationSearch] = useState('')
   const [fieldSearch, setFieldSearch] = useState('')
-  const booleanFields = useMemo(() => fields.filter((field) => field.booleanLike), [fields])
-  const selectableFields = booleanFields.length > 0 ? booleanFields : fields
+  const textFields = useMemo(
+    () => fields.filter((field) => field.storage === 'guest_metadata' && field.textLike),
+    [fields],
+  )
   const filteredCategories = filterByLabel(categories, populationSearch, (item) => item.name)
   const filteredSegments = filterByLabel(segments, populationSearch, (item) => item.name)
   const filteredFields = filterByLabel(
-    selectableFields,
+    textFields,
     fieldSearch,
     (field) => `${field.label} ${field.key}`,
   )
@@ -43,10 +45,12 @@ export default function ConfigurationStep({
     configuration.mode === 'categories'
       ? configuration.categoryIds.length > 0
       : Boolean(configuration.segmentId)
+  const targetFieldIsValid = textFields.some(
+    (field) => field.key === configuration.targetFieldKey,
+  )
   const winnerCountIsValid =
     Number.isInteger(configuration.winnerCount) && configuration.winnerCount > 0
-  const canContinue =
-    populationIsValid && Boolean(configuration.targetFieldKey) && winnerCountIsValid
+  const canContinue = populationIsValid && targetFieldIsValid && winnerCountIsValid
 
   function setMode(mode: DrawConfiguration['mode']) {
     onChange({
@@ -70,7 +74,7 @@ export default function ConfigurationStep({
       <div>
         <h1 className="text-xl font-medium text-[#1A1A1A]">Configurer le tirage</h1>
         <p className="mt-2 text-sm leading-6 text-[#6B6B6B]">
-          Choisissez plusieurs catégories en OU, ou un seul segment, puis le champ qui recevra le résultat.
+          Choisissez plusieurs catégories en OU, ou un seul segment, puis le champ texte qui recevra le résultat.
         </p>
       </div>
 
@@ -140,25 +144,23 @@ export default function ConfigurationStep({
 
         <div className="space-y-6">
           <div className="rounded-lg border border-[#E8E4DE] p-4">
-            <h2 className="text-sm font-medium text-[#1A1A1A]">Champ à alimenter</h2>
+            <h2 className="text-sm font-medium text-[#1A1A1A]">Champ texte à alimenter</h2>
             <p className="mt-1 text-xs leading-5 text-[#6B6B6B]">
-              Les champs personnalisés sont lus depuis les guest_fields et seront écrits dans guest_metadata.
+              Le module écrira la valeur texte « true » pour les gagnants et « false » pour les autres participants.
+              Les listes de valeurs et les champs à choix multiples sont exclus de cette première version.
             </p>
 
-            {fields.length === 0 ? (
+            {textFields.length === 0 ? (
               <Alert className="mt-4">
-                Aucun guest_field exploitable n’a été trouvé dans la réponse de l’événement.
+                {fields.length === 0
+                  ? 'Aucun guest_field n’a été trouvé pour cet événement.'
+                  : 'Aucun champ texte personnalisé sans liste de valeurs n’a été trouvé.'}
               </Alert>
             ) : (
               <>
-                {booleanFields.length === 0 && (
-                  <Alert className="mt-4">
-                    Aucun type booléen explicite n’a été détecté. Tous les champs sont affichés pour permettre la vérification.
-                  </Alert>
-                )}
                 <Input
                   className="mt-4"
-                  placeholder="Rechercher un champ"
+                  placeholder="Rechercher un champ texte"
                   value={fieldSearch}
                   onChange={(event) => setFieldSearch(event.target.value)}
                 />
@@ -180,8 +182,7 @@ export default function ConfigurationStep({
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm text-[#1A1A1A]">{field.label}</span>
                         <span className="mt-1 block truncate font-mono text-[10px] text-[#B0ADA8]">
-                          {field.key} · {field.storage}
-                          {field.type ? ` · ${field.type}` : ''}
+                          {field.key}{field.type ? ` · ${field.type}` : ''}
                         </span>
                       </span>
                     </label>
