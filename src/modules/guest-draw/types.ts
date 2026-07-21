@@ -73,7 +73,6 @@ export interface GuestPopulationResult {
   pagesLoaded: number
   guestsWithMetadata: number
   warnings: string[]
-  segmentFilterVerified: boolean
 }
 
 export type DrawTargetValue = 'true' | 'false'
