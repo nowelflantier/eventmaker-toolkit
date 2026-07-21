@@ -69,7 +69,8 @@ function buildApiUrl(path: string, token: string, apiBase: EventmakerApiBase = '
 
   orderedParams.set('auth_token', token)
   params.forEach((value, key) => {
-    orderedParams.set(key, value)
+    if (key === 'auth_token' || key === 'path' || key === 'api_base') return
+    orderedParams.append(key, value)
   })
 
   if (import.meta.env.DEV) {
