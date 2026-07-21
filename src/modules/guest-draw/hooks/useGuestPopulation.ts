@@ -53,7 +53,10 @@ export function useGuestPopulation() {
             buildGuestListPath(params.eventId, page, params.configuration),
             { signal: controller.signal },
           )
-          const pageGuests = normalizeGuests(response)
+          const pageGuests = normalizeGuests(
+            response,
+            params.configuration.targetFieldKey,
+          )
 
           if (pageGuests.length === 0) break
 
@@ -163,16 +166,16 @@ function buildGuestListPath(
   return `/events/${encodeURIComponent(eventId)}/guests.json?${params.toString()}`
 }
 
-function normalizeGuests(data: unknown): DrawGuest[] {
+function normalizeGuests(data: unknown, targetFieldKey: string): DrawGuest[] {
   const rawGuests =
     readArray(data, ['guests', 'data', 'results']) ?? (Array.isArray(data) ? data : [])
 
   return rawGuests
-    .map((item) => normalizeGuest(item))
+    .map((item) => normalizeGuest(item, targetFieldKey))
     .filter((guest): guest is DrawGuest => guest !== null)
 }
 
-function normalizeGuest(data: unknown): DrawGuest | null {
+function normalizeGuest(data: unknown, targetFieldKey: string): DrawGuest | null {
   const guest = asRecord(data)
   const id = stringValue(guest._id) || stringValue(guest.id)
 
@@ -182,6 +185,15 @@ function normalizeGuest(data: unknown): DrawGuest | null {
   }
 
   const guestMetadata = normalizeGuestMetadata(guest)
+  const guestMetadataMap = Object.fromEntries(
+    guestMetadata.map((entry) => [entry.name, entry.value]),
+  )
+  const targetValue = Object.prototype.hasOwnProperty.call(
+    guestMetadataMap,
+    targetFieldKey,
+  )
+    ? guestMetadataMap[targetFieldKey]
+    : guest[targetFieldKey]
 
   return {
     id,
@@ -192,9 +204,8 @@ function normalizeGuest(data: unknown): DrawGuest | null {
     guestCategoryId:
       stringValue(guest.guest_category_id) || stringValue(guest.guestCategoryId),
     guestMetadata,
-    guestMetadataMap: Object.fromEntries(
-      guestMetadata.map((entry) => [entry.name, entry.value]),
-    ),
+    guestMetadataMap,
+    targetValue,
   }
 }
 
