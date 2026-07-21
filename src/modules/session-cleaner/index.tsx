@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Stepper from '../../components/Stepper'
 import { useAccesspoints } from './hooks/useAccesspoints'
 import EventSelector from './steps/EventSelector'
 import ExecutionStep from './steps/ExecutionStep'
@@ -23,7 +24,7 @@ export default function SessionCleaner({ onComplete }: SessionCleanerProps) {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-8">
-      <Stepper currentStep={step} />
+      <Stepper steps={steps} currentStep={step} accentColor="#B91C1C" />
       {eventId && (
         <div className="mt-4 border-l-2 border-[#B91C1C] bg-white px-4 py-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -65,40 +66,5 @@ export default function SessionCleaner({ onComplete }: SessionCleanerProps) {
         )}
       </div>
     </main>
-  )
-}
-
-function Stepper({ currentStep }: { currentStep: number }) {
-  return (
-    <nav className="rounded-xl border border-[#E8E4DE] bg-white px-4 py-3">
-      <ol className="grid gap-2 md:grid-cols-3">
-        {steps.map((label, index) => {
-          const isCurrent = index === currentStep
-          const isDone = index < currentStep
-          return (
-            <li key={label} className="flex items-center gap-2">
-              <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] ${
-                  isCurrent
-                    ? 'bg-[#B91C1C] text-white'
-                    : isDone
-                      ? 'bg-[#22C55E] text-white'
-                      : 'bg-[#F0EEE9] text-[#B0ADA8]'
-                }`}
-              >
-                {index + 1}
-              </span>
-              <span
-                className={`truncate text-xs ${
-                  isCurrent ? 'font-medium text-[#1A1A1A]' : 'text-[#6B6B6B]'
-                }`}
-              >
-                {label}
-              </span>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
   )
 }

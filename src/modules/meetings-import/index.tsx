@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Stepper from '../../components/Stepper'
 import { useEventData } from './hooks/useEventData'
 import { useGuestResolver } from './hooks/useGuestResolver'
 import { buildMatrix } from './lib/buildMatrix'
@@ -87,14 +88,14 @@ export default function MeetingsImport({ onImportComplete }: MeetingsImportProps
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-8">
-      <Stepper currentStep={step} />
+      <Stepper steps={steps} currentStep={step} accentColor="#20A599" />
       {eventData.event && (
         <div className="mt-4 border-l-2 border-[#20A599] bg-white px-4 py-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <div>
               <p className="font-mono text-[10px] uppercase text-[#B0ADA8]">Eventmaker event</p>
               <p className="mt-1 text-base font-medium text-[#1A1A1A]">
-              {eventData.event.name || eventData.event.title || `Event ${eventId}`}
+                {eventData.event.name || eventData.event.title || `Event ${eventId}`}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 font-mono text-[11px] text-[#6B6B6B]">
@@ -168,40 +169,5 @@ export default function MeetingsImport({ onImportComplete }: MeetingsImportProps
         )}
       </div>
     </main>
-  )
-}
-
-function Stepper({ currentStep }: { currentStep: number }) {
-  return (
-    <nav className="rounded-xl border border-[#E8E4DE] bg-white px-4 py-3">
-      <ol className="grid gap-2 md:grid-cols-5">
-        {steps.map((label, index) => {
-          const isCurrent = index === currentStep
-          const isDone = index < currentStep
-          return (
-            <li key={label} className="flex items-center gap-2">
-              <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] ${
-                  isCurrent
-                    ? 'bg-[#20A599] text-white'
-                    : isDone
-                      ? 'bg-[#22C55E] text-white'
-                      : 'bg-[#F0EEE9] text-[#B0ADA8]'
-                }`}
-              >
-                {index + 1}
-              </span>
-              <span
-                className={`truncate text-xs ${
-                  isCurrent ? 'font-medium text-[#1A1A1A]' : 'text-[#6B6B6B]'
-                }`}
-              >
-                {label}
-              </span>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
   )
 }

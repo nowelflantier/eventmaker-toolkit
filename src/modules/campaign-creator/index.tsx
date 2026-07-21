@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Stepper from '../../components/Stepper'
 import { useCampaignDryRun } from './hooks/useCampaignDryRun'
 import { useSessionData } from './hooks/useSessionData'
 import { getSavedPrefix } from './lib/segmentName'
@@ -46,7 +47,7 @@ export default function CampaignCreator({ onComplete }: CampaignCreatorProps) {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-8">
-      <Stepper currentStep={step} />
+      <Stepper steps={steps} currentStep={step} accentColor="#B74A20" />
       {eventId && (
         <div className="mt-4 border-l-2 border-[#B74A20] bg-white px-4 py-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -104,40 +105,5 @@ export default function CampaignCreator({ onComplete }: CampaignCreatorProps) {
         )}
       </div>
     </main>
-  )
-}
-
-function Stepper({ currentStep }: { currentStep: number }) {
-  return (
-    <nav className="rounded-xl border border-[#E8E4DE] bg-white px-4 py-3">
-      <ol className="grid gap-2 md:grid-cols-4">
-        {steps.map((label, index) => {
-          const isCurrent = index === currentStep
-          const isDone = index < currentStep
-          return (
-            <li key={label} className="flex items-center gap-2">
-              <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] ${
-                  isCurrent
-                    ? 'bg-[#B74A20] text-white'
-                    : isDone
-                      ? 'bg-[#22C55E] text-white'
-                      : 'bg-[#F0EEE9] text-[#B0ADA8]'
-                }`}
-              >
-                {index + 1}
-              </span>
-              <span
-                className={`truncate text-xs ${
-                  isCurrent ? 'font-medium text-[#1A1A1A]' : 'text-[#6B6B6B]'
-                }`}
-              >
-                {label}
-              </span>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
   )
 }
