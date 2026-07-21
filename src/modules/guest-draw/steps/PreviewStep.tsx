@@ -47,10 +47,7 @@ export default function PreviewStep({
   const currentTrueCount = result?.guests.filter((guest) => isTrueValue(guest.targetValue)).length ?? 0
   const insufficientPopulation =
     result !== null && result.guests.length < configuration.winnerCount
-  const canContinue =
-    result !== null &&
-    !insufficientPopulation &&
-    (configuration.mode !== 'segment' || result.segmentFilterVerified)
+  const canContinue = result !== null && !insufficientPopulation
 
   async function handleLoad() {
     try {
