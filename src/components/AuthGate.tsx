@@ -59,6 +59,7 @@ export default function AuthGate({ onAuthenticated }: AuthGateProps) {
             <span className="mb-2 block text-sm font-medium text-[#1A1A1A]">Token</span>
             <Input
               autoComplete="off"
+              type="password"
               value={token}
               onChange={(event) => setToken(event.target.value)}
               placeholder="auth_token Eventmaker"
