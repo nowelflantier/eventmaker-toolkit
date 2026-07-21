@@ -170,9 +170,6 @@ export default function PreviewStep({
                     const category = categories.find(
                       (item) => item.id === guest.guestCategoryId,
                     )
-                    const currentValue = selectedField
-                      ? guest.guestMetadataMap[selectedField.key]
-                      : undefined
 
                     return (
                       <tr key={guest.id} className="border-b border-[#F0EEE9] last:border-0">
@@ -189,7 +186,7 @@ export default function PreviewStep({
                         </td>
                         <td className="py-3 pr-3 text-[#6B6B6B]">{category?.name || guest.guestCategoryId || '-'}</td>
                         <td className="py-3 pr-4 font-mono text-[11px] text-[#6B6B6B]">
-                          {formatValue(currentValue)}
+                          {formatValue(guest.targetValue)}
                         </td>
                       </tr>
                     )
