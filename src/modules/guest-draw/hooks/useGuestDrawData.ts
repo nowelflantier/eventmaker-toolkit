@@ -5,7 +5,6 @@ import {
   GuestDrawEvent,
   GuestDrawEventData,
   GuestFieldDefinition,
-  GuestFieldStorage,
   GuestSegment,
 } from '../types'
 
@@ -27,14 +26,6 @@ const nativeGuestFields = new Set([
   'blacklisted',
 ])
 
-const metadataContainerKeys = new Set([
-  'guest_metadata',
-  'guestmetadata',
-  'guest_metadata_fields',
-  'metadata_fields',
-  'custom_fields',
-])
-
 export function useGuestDrawData() {
   const [data, setData] = useState<GuestDrawEventData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -46,8 +37,9 @@ export function useGuestDrawData() {
 
     try {
       const encodedEventId = encodeURIComponent(eventId)
-      const [eventResponse, categoriesResponse, segmentsResponse] = await Promise.all([
+      const [eventResponse, fieldsResponse, categoriesResponse, segmentsResponse] = await Promise.all([
         apiFetch<unknown>(`/events/${encodedEventId}.json`),
+        apiFetch<unknown>(`/events/${encodedEventId}/guest_fields.json`),
         apiFetch<unknown>(`/events/${encodedEventId}/guest_categories.json`),
         apiFetch<unknown>(`/events/${encodedEventId}/saved_searches.json?locale=fr`, {
           apiBase: 'app',
@@ -58,7 +50,7 @@ export function useGuestDrawData() {
         event: normalizeEvent(eventResponse, eventId),
         categories: normalizeCategories(categoriesResponse),
         segments: normalizeSegments(segmentsResponse),
-        fields: normalizeGuestFields(eventResponse),
+        fields: normalizeGuestFields(fieldsResponse),
       }
 
       setData(normalized)
@@ -136,110 +128,39 @@ function normalizeSegments(data: unknown): GuestSegment[] {
 }
 
 function normalizeGuestFields(data: unknown): GuestFieldDefinition[] {
-  const root = asRecord(data)
-  const event = readObject(root, ['event', 'data']) ?? root
   const rawFields =
-    event.guest_fields ??
-    event.guestFields ??
-    event.fields ??
-    root.guest_fields ??
-    root.guestFields ??
-    root.fields
+    readArray(data, ['guest_fields', 'guestFields', 'fields', 'data', 'results']) ??
+    (Array.isArray(data) ? data : [])
 
-  const fields = extractGuestFields(rawFields)
+  const fields = rawFields
+    .map(normalizeGuestField)
+    .filter((item): item is GuestFieldDefinition => item !== null)
+
   return dedupeByKey(fields).sort((left, right) => left.label.localeCompare(right.label, 'fr'))
 }
 
-function extractGuestFields(
-  value: unknown,
-  forcedStorage?: GuestFieldStorage,
-  depth = 0,
-): GuestFieldDefinition[] {
-  if (depth > 4 || value === null || value === undefined) return []
-
-  if (Array.isArray(value)) {
-    return value.flatMap((item) => extractGuestFieldItem(item, forcedStorage, depth))
-  }
-
-  if (typeof value === 'string') {
-    const field = normalizeGuestField(value, forcedStorage)
-    return field ? [field] : []
-  }
-
-  const record = asRecord(value)
-  if (Object.keys(record).length === 0) return []
-
-  if (hasFieldIdentity(record)) {
-    return extractGuestFieldItem(record, forcedStorage, depth)
-  }
-
-  return Object.entries(record).flatMap(([entryKey, entryValue]) => {
-    const normalizedEntryKey = normalizeKey(entryKey)
-    if (metadataContainerKeys.has(normalizedEntryKey)) {
-      return extractGuestFields(entryValue, 'guest_metadata', depth + 1)
-    }
-
-    if (Array.isArray(entryValue)) {
-      return extractGuestFields(entryValue, forcedStorage, depth + 1)
-    }
-
-    if (entryValue && typeof entryValue === 'object') {
-      const child = asRecord(entryValue)
-      return extractGuestFieldItem(
-        { ...child, key: fieldKey(child) || entryKey },
-        forcedStorage ?? (nativeGuestFields.has(entryKey) ? 'native' : undefined),
-        depth + 1,
-      )
-    }
-
-    const field = normalizeGuestField(entryKey, forcedStorage)
-    return field ? [field] : []
-  })
-}
-
-function extractGuestFieldItem(
-  value: unknown,
-  forcedStorage: GuestFieldStorage | undefined,
-  depth: number,
-): GuestFieldDefinition[] {
-  const record = asRecord(value)
-  const key = fieldKey(record)
-  const normalizedKey = normalizeKey(key)
-  const nestedMetadata = [
-    record.guest_metadata,
-    record.guestMetadata,
-    record.guest_metadata_fields,
-    record.metadata_fields,
-    record.custom_fields,
-  ].flatMap((nested) => extractGuestFields(nested, 'guest_metadata', depth + 1))
-  const nestedFields =
-    normalizedKey === 'guest_metadata' || normalizedKey === 'guestmetadata'
-      ? extractGuestFields(record.fields ?? record.items ?? record.children, 'guest_metadata', depth + 1)
-      : []
-  const isMetadataContainer = metadataContainerKeys.has(normalizedKey)
-  const field = isMetadataContainer ? null : normalizeGuestField(value, forcedStorage)
-
-  return [...(field ? [field] : []), ...nestedMetadata, ...nestedFields]
-}
-
-function normalizeGuestField(
-  data: unknown,
-  forcedStorage?: GuestFieldStorage,
-): GuestFieldDefinition | null {
+function normalizeGuestField(data: unknown): GuestFieldDefinition | null {
   if (typeof data === 'string') {
     const key = data.trim()
     if (!key) return null
+
     return {
       key,
       label: key,
       type: '',
-      storage: forcedStorage ?? (nativeGuestFields.has(key) ? 'native' : 'guest_metadata'),
+      storage: nativeGuestFields.has(key) ? 'native' : 'guest_metadata',
       booleanLike: false,
     }
   }
 
   const field = asRecord(data)
-  const key = fieldKey(field)
+  const key =
+    stringValue(field.key) ||
+    stringValue(field.property) ||
+    stringValue(field.field) ||
+    stringValue(field.slug) ||
+    stringValue(field.metadata_name) ||
+    stringValue(field.name)
 
   if (!key) {
     console.warn('Guest field has no usable key', { field })
@@ -258,48 +179,24 @@ function normalizeGuestField(
     stringValue(field.input_type) ||
     stringValue(field.control_type) ||
     stringValue(field.widget) ||
-    stringValue(field.liquid_tag) ||
     stringValue(field.kind)
-  const scope = [field.storage, field.scope, field.owner, field.object, field.model]
-    .map((value) => String(value ?? '').toLowerCase())
-    .join(' ')
-  const explicitlyMetadata =
-    field.is_metadata === true ||
-    field.guest_metadata === true ||
-    scope.includes('metadata')
-  const storage =
-    forcedStorage ??
-    (nativeGuestFields.has(key) && !explicitlyMetadata ? 'native' : 'guest_metadata')
+  const hasCustomId = Boolean(stringValue(field._id) || stringValue(field.id))
 
   return {
     key,
     label,
     type,
-    storage,
+    storage: nativeGuestFields.has(key) && !hasCustomId ? 'native' : 'guest_metadata',
     booleanLike: isBooleanLikeField(field, type),
   }
-}
-
-function fieldKey(field: Record<string, unknown>): string {
-  return (
-    stringValue(field.key) ||
-    stringValue(field.property) ||
-    stringValue(field.field) ||
-    stringValue(field.slug) ||
-    stringValue(field.metadata_name) ||
-    stringValue(field.name)
-  )
-}
-
-function hasFieldIdentity(field: Record<string, unknown>): boolean {
-  return Boolean(fieldKey(field))
 }
 
 function isBooleanLikeField(field: Record<string, unknown>, type: string): boolean {
   const normalizedType = type.toLowerCase()
   if (/checkbox|boolean|bool|switch|toggle/.test(normalizedType)) return true
 
-  const values = readArray(field, ['values', 'options', 'choices']) ?? []
+  const values =
+    readArray(field, ['available_values', 'availableValues', 'values', 'options', 'choices']) ?? []
   const normalizedValues = values
     .map((value) => {
       const item = asRecord(value)
@@ -346,10 +243,6 @@ function asRecord(data: unknown): Record<string, unknown> {
 
 function stringValue(value: unknown): string {
   return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : ''
-}
-
-function normalizeKey(value: string): string {
-  return value.trim().toLowerCase().replace(/[\s-]+/g, '_')
 }
 
 function nullableNumber(value: unknown): number | null {
