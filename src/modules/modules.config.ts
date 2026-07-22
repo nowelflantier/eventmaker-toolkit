@@ -42,4 +42,14 @@ export const modules: ModuleConfig[] = [
     accentBg: '#FEECEC',
     accentIcon: '#B91C1C',
   },
+  {
+    id: 'guest-draw',
+    title: 'Tirage au sort',
+    description: 'Préparez un tirage au sort parmi les participants d’un événement.',
+    icon: 'Shuffle',
+    status: 'active',
+    route: '/guest-draw',
+    accentBg: '#F3EEFF',
+    accentIcon: '#6D4CC9',
+  },
 ]
